@@ -1,0 +1,107 @@
+version: '3'
+
+services:
+  mongo:
+    container_name: openhim-mongo
+    ports:
+      - "27018:27017"
+    image: mongo:3.4
+    restart: always
+    logging:
+      options:
+        max-size: 5m
+        
+
+  core:
+    container_name: openhim-core
+    image: jembi/openhim-core
+    environment:
+      - mongo_url=mongodb://mongo/openhim
+      - mongo_atnaUrl=mongodb://mongo/openhim
+    ports:
+      - "8080:8080"
+      - "5000:5000"
+      - "5001:5001"
+      - "5050:5050"
+      - "5051:5051"
+      - "5052:5052"
+      - "7788:7788"
+    depends_on:
+      - mongo
+    restart: always
+    logging:
+      options:
+        max-size: 5m
+
+  console:
+    container_name: openhim-console
+    image: jembi/openhim-console
+    ports:
+        - "9000:80"
+    volumes:
+      - ./disc/openhim/config/default.json:/usr/share/nginx/html/config/default.json
+    restart: always
+    logging:
+      options:
+        max-size: 5m
+
+
+
+  labToOmrsMediator:
+    container_name: savics-labtoomrs
+    image: savicsorg/labtoomrs:latest
+    ports:
+      - "4000:4000"
+    depends_on:
+      - core
+    volumes:
+      - ./disc/labtoomrs/config/:/usr/src/app/savics/labToOmrsMediator/config/
+      - ./disc/labtoomrs/logs/:/usr/src/app/savics/logs/
+    restart: always
+    logging:
+      options:
+        max-size: 5m
+
+
+  omrsToNidaMediator:
+    container_name: savics-omrstonida
+    image: savicsorg/omrstonida:latest
+    ports:
+      - "4001:4001"
+    depends_on:
+      - core
+    extra_hosts:
+      - "onlineauthentication.nida.gov.rw:192.168.100.150"
+    volumes:
+      - ./disc/omrstonida/config/:/usr/src/app/savics/omrsToNidaMediator/config/
+    restart: always
+    logging:
+      options:
+        max-size: 5m
+
+
+  omrsToDHIS2Mediator:
+    container_name: savics-omrstodhis2
+    image: savicsorg/omrstodhis2:latest
+    ports:
+      - "4002:4002"
+    depends_on:
+      - core
+    volumes:
+      - ./disc/omrstodhis2/config/:/usr/src/app/savics/omrsToDHIS2Mediator/config/
+    restart: always
+    logging:
+      options:
+        max-size: 5m
+
+ 
+
+
+
+
+
+
+
+
+
+
